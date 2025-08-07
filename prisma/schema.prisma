@@ -1,15 +1,91 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model ApiKey {
+  id        String    @id
+  key       String    @unique
+  name      String
+  createdAt DateTime  @default(now())
+  userId    String
+  enabled   Boolean   @default(true)
+  lastUsed  DateTime?
+  user      user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Providers {
+  id                String  @id
+  openaiApiKey      String?
+  openaiBaseUrl     String  @default("https://api.openai.com/v1")
+  anthropicApiKey   String?
+  anthropicBaseUrl  String  @default("https://api.anthropic.com/v1")
+  googleGenApiKey   String?
+  googleGenBaseUrl  String  @default("https://generativelanguage.googleapis.com/v1beta")
+  azureResourceName String?
+  azureApiKey       String?
+  xApiKey           String?
+  xBaseurl          String  @default("https://api.x.ai/v1")
+  deepseekApiKey    String?
+  deepseekBaseUrl   String  @default("https://api.deepseek.com/v1")
+  perplexityApiKey  String?
+  perplexityBaseUrl String  @default("https://api.perplexity.ai")
+  user              user    @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
+model account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+  user                  user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model user {
+  id              String     @id
+  name            String
+  email           String     @unique
+  emailVerified   Boolean
+  image           String?
+  createdAt       DateTime
+  updatedAt       DateTime
+  normalizedEmail String?
+  ApiKey          ApiKey[]
+  Providers       Providers?
+  account         account[]
+  session         session[]
+}
+
+model verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
 }
