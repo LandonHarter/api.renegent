@@ -152,7 +152,6 @@ export const schemaValidator = <
 
 		if (!result.success) {
 			console.log("Invalid request. Failed to parse request body");
-			console.log(JSON.stringify(result.error));
 			return c.json(
 				{
 					error: "Invalid request. Make sure your request body follows the schema.",

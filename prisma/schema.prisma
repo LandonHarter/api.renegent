@@ -76,6 +76,8 @@ model user {
   updatedAt       DateTime
   normalizedEmail String?
   ApiKey          ApiKey[]
+  Model           Model[]
+  Prompt          Prompt[]
   Providers       Providers?
   account         account[]
   session         session[]
@@ -88,4 +90,40 @@ model verification {
   expiresAt  DateTime
   createdAt  DateTime?
   updatedAt  DateTime?
+}
+
+model Model {
+  id              String   @id
+  name            String
+  modelId         String
+  provider        Provider
+  providerModelId String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+  userId          String
+  user            user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Prompt          Prompt[]
+}
+
+model Prompt {
+  id        String   @id
+  name      String
+  prompt    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  variables String[] @default([])
+  userId    String
+  promptId  String
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Model     Model[]
+}
+
+enum Provider {
+  OPENAI
+  ANTHROPIC
+  GOOGLE_GEN
+  AZURE
+  X
+  DEEPSEEK
+  PERPLEXITY
 }

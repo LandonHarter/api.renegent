@@ -3,7 +3,7 @@ import chat from "./chat.js";
 import { getProviderKeys, isValidApiKey } from "./lib/keys.js";
 import { createHono } from "./hono.js";
 
-const app = createHono();
+const app = createHono().basePath("/v1");
 app.use("*", async (c, next) => {
 	const auth = c.req.header("Authorization");
 	if (!auth) {
@@ -25,6 +25,7 @@ app.use("*", async (c, next) => {
 	}
 
 	c.set("providers", providerKeys);
+	c.set("apiKey", key);
 	return next();
 });
 app.route("/chat", chat);
