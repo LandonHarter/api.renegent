@@ -67,15 +67,17 @@ model session {
 }
 
 model user {
-  id              String     @id
+  id              String          @id
   name            String
-  email           String     @unique
+  email           String          @unique
   emailVerified   Boolean
   image           String?
   createdAt       DateTime
   updatedAt       DateTime
   normalizedEmail String?
   ApiKey          ApiKey[]
+  DataSource      DataSource[]
+  KnowledgeBase   KnowledgeBase[]
   Model           Model[]
   Prompt          Prompt[]
   Providers       Providers?
@@ -93,16 +95,17 @@ model verification {
 }
 
 model Model {
-  id              String   @id
+  id              String          @id
   name            String
   modelId         String
   provider        Provider
   providerModelId String
-  createdAt       DateTime @default(now())
+  createdAt       DateTime        @default(now())
   updatedAt       DateTime
   userId          String
-  user            user     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  Prompt          Prompt[]
+  user            user            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  KnowledgeBase   KnowledgeBase[] @relation("KnowledgeBaseToModel")
+  Prompt          Prompt[]        @relation("ModelToPrompt")
 }
 
 model Prompt {
@@ -115,7 +118,38 @@ model Prompt {
   userId    String
   promptId  String
   user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  Model     Model[]
+  Model     Model[]  @relation("ModelToPrompt")
+}
+
+model DataSource {
+  id             String           @id
+  name           String
+  createdAt      DateTime         @default(now())
+  userId         String
+  description    String
+  user           user             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data_fragments data_fragments[]
+  KnowledgeBase  KnowledgeBase[]  @relation("DataSourceToKnowledgeBase")
+}
+
+model KnowledgeBase {
+  id          String       @id
+  name        String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime
+  userId      String
+  description String       @default("No description")
+  user        user         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  DataSource  DataSource[] @relation("DataSourceToKnowledgeBase")
+  Model       Model[]      @relation("KnowledgeBaseToModel")
+}
+
+model data_fragments {
+  id           String                @id
+  content      String
+  embedding    Unsupported("vector")
+  dataSourceId String
+  DataSource   DataSource            @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
 }
 
 enum Provider {

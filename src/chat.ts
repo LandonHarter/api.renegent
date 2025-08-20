@@ -4,6 +4,7 @@ import { schemaValidator } from "./lib/validator.js";
 import z from "zod";
 import { getProvider } from "./lib/providers.js";
 import { generateText } from "ai";
+import { useKnowledgeBase } from "./lib/tools.js";
 
 const prisma = new PrismaClient();
 
@@ -60,6 +61,9 @@ app.post(
 				userId: user.id,
 				modelId: model,
 			},
+			include: {
+				KnowledgeBase: true,
+			},
 		});
 		if (!renegentModel) {
 			return c.json({ error: "Model not found" }, 404);
@@ -83,6 +87,16 @@ app.post(
 			messages: [
 				{
 					role: "system",
+					content: `You are a model deployed on the platform Renegent. You have access to a knowledge base that you can use to answer questions. You can use the knowledgeBase tool to access the knowledge base.
+						
+						You will be able to pull from the following knowledge bases (you won't be able to pull only from a single one, you will query and it will pull from all of them):
+						${renegentModel.KnowledgeBase.map(
+							(kb) => `- ${kb.name}: ${kb.description}`
+						).join("\n")}
+						`,
+				},
+				{
+					role: "system",
 					content: renegentPrompt.prompt,
 				},
 				...messages,
@@ -91,6 +105,9 @@ app.post(
 			temperature,
 			topP: top_p,
 			presencePenalty: presence_penalty,
+			tools: {
+				knowledgeBase: useKnowledgeBase(renegentModel.KnowledgeBase),
+			},
 		});
 		return c.json(result);
 	}
